@@ -7,25 +7,22 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="4e97d9f7-afb4-4792-b920-f54a5183f978" >
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="afaff790-3284-4527-a3ce-46da6423354f" >
 		<http:listener-connection host="0.0.0.0" port="8081" />
 	</http:listener-config>
-	<db:config name="MySQL" doc:name="Database Config" doc:id="0a1cf93d-998e-45e8-aa86-7150b505aade" >
-		<db:my-sql-connection host="localhost" port="3306" user="root" password="root" database="soa"/>
-	</db:config>
-	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="b2ee4b2c-8b3b-4532-b6a5-ec48b1a2d7d8" >
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="ade6cbcc-d55c-44e4-9632-e1374b5774fd" >
 		<http:request-connection host="localhost" port="8081" />
 	</http:request-config>
-	<flow name="findUserById" doc:id="0faae921-ad19-4c71-ba1d-46b53c0c1964" >
-		<http:listener doc:name="Listener" doc:id="2de535f5-8985-4c92-802a-6b1337adafad" config-ref="HTTP_Listener_config" path="/user/id"/>
-		<db:select doc:name="find user by id" doc:id="1f5e4931-8304-45f6-8f96-2d202f0e825f" config-ref="MySQL" >
-			<db:sql ><![CDATA[select * from users where id = :id]]></db:sql>
-			<db:input-parameters ><![CDATA[#[{
-	"id": payload.id
-}]]]></db:input-parameters>
+	<db:config name="MySQLConfig" doc:name="Database Config" doc:id="8ab3f4ed-bf94-4a0c-bc1d-3087ca22e59e" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="root" database="soa"/>
+	</db:config>
+	<flow name="findAllUsers" doc:id="44039b4b-02c1-4e18-9d09-86468c081a52" >
+		<http:listener doc:name="Listener" doc:id="5f96d2aa-6e98-460b-8127-b3a98e774b52" config-ref="HTTP_Listener_config" path="/users"/>
+		<db:select doc:name="getAllUsers" doc:id="6ec9ff91-3526-431c-9317-9c98cb7b074f" config-ref="MySQLConfig" >
+			<db:sql ><![CDATA[select * from users]]></db:sql>
 		</db:select>
-		<logger level="INFO" doc:name="Logger" doc:id="2760a855-df85-4163-9c2d-e8f37a9a5bb9" message="#[payload]" />
-		<ee:transform doc:name="Transform Message" doc:id="be931a4d-f0d8-4545-8b27-3a3d87e095e9" >
+		<logger level="INFO" doc:name="Logger" doc:id="9f039a36-b080-4090-8845-1619b118bd7e" message="#[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="b4c410a0-b003-40e2-9420-e9f6264f3753" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
@@ -40,19 +37,45 @@ output application/json
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger1" doc:id="74fc1003-ce4f-460e-b327-7e0f62de7775" message="#[payload]" />
+		<logger level="INFO" doc:name="Logger1" doc:id="2854c9cc-56d5-41f9-bcee-5d7f5b058c39" message="#[payload]" />
 	</flow>
-	<flow name="findUserByEmailPwd" doc:id="289418c8-7391-412d-accc-90cc26d1ee20" >
-		<http:listener doc:name="Listener" doc:id="5e50a6c7-0cf0-48c2-ba30-a7b5475ec45c" config-ref="HTTP_Listener_config" path="/user/email"/>
-		<db:select doc:name="find user by email and pwd" doc:id="0a39cdee-5091-4c0d-8937-89537cb5085e" config-ref="MySQL" >
+	<flow name="findUserById" doc:id="f8b8e7d0-bea0-4db6-b85f-95b6c84b8338" >
+		<http:listener doc:name="Listener" doc:id="e46b2707-fb58-41c3-ba4a-8f10080fd10d" config-ref="HTTP_Listener_config" path="/user/id"/>
+		<db:select doc:name="find user by id" doc:id="048fc2db-3f3b-4386-aea8-a4e512d9b3fb" config-ref="MySQLConfig" >
+			<db:sql ><![CDATA[select * from users where id = :id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"id": payload.id
+}]]]></db:input-parameters>
+		</db:select>
+		<logger level="INFO" doc:name="Logger" doc:id="9fcf0ae6-6767-4e31-9b95-32e399f68912" message="#[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="c7599d8d-ae43-417a-aa21-84a14495cacf" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"id": payload[0].id,
+	"nom": payload[0].nom,
+	"prenom": payload[0].prenom,
+	"email": payload[0].email,
+	"pwd": payload[0].password,
+	"role": payload[0].role
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger1" doc:id="c4dabe78-fabb-4ddc-bcdb-023136ae9af6" message="#[payload]" />
+	</flow>
+	<flow name="findUserByEmailPwd" doc:id="94ad5c74-ed0b-4027-b95c-2c9b8f7dfdff" >
+		<http:listener doc:name="Listener" doc:id="5ae3b00e-ec87-459f-81ff-ade26b96e774" config-ref="HTTP_Listener_config" path="/user/email"/>
+		<db:select doc:name="find user by email and pwd" doc:id="435a8602-e851-4689-a22f-9f91b73ca7a1" config-ref="MySQLConfig" >
 			<db:sql ><![CDATA[select * from users where email = :email and password = :password]]></db:sql>
 			<db:input-parameters ><![CDATA[#[{
 	"email": payload.email,
 	"password": payload.password
 }]]]></db:input-parameters>
 		</db:select>
-		<logger level="INFO" doc:name="Logger" doc:id="593f7b25-1ecc-46ba-8c37-9769777ab261" message="#[payload]" />
-		<ee:transform doc:name="Transform Message" doc:id="2d0f04f2-0700-4a35-97a5-14fb9a6c0aea" >
+		<logger level="INFO" doc:name="Logger" doc:id="ef977bc5-8d74-4ecc-b9a4-b9c4fc39df5e" message="#[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="36624d38-4f91-4b9c-b3a6-781b2722e7b9" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
@@ -67,11 +90,11 @@ output application/json
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger1" doc:id="28060347-75ef-4ed1-8b72-552b9afe133a" message="#[payload]" />
+		<logger level="INFO" doc:name="Logger1" doc:id="55067989-6ab3-424c-a64c-df667b85f33a" message="#[payload]" />
 	</flow>
-	<flow name="insertUser" doc:id="79f48bee-1b9d-4467-b025-792f2b4e337a">
-		<http:listener doc:name="Listener" doc:id="a8ffc35f-f0b8-45f0-916c-aa9ab3732cec" config-ref="HTTP_Listener_config" path="/user/add"/>
-		<db:insert doc:name="Insert" doc:id="5baebc7c-07ab-4d9a-bd3e-b975eaa8f412" config-ref="MySQL">
+	<flow name="insertUser" doc:id="f76ea005-e83f-480d-b918-a8663f1df47c">
+		<http:listener doc:name="Listener" doc:id="00c8b0d4-ec32-4b13-922e-896180308a49" config-ref="HTTP_Listener_config" path="/user/add"/>
+		<db:insert doc:name="Insert" doc:id="4bbd03fa-529e-4337-95fe-15a0eb19f91a" config-ref="MySQLConfig">
 			<db:sql ><![CDATA[insert into users(nom, prenom, email, password, role) values 
 (:nom, :prenom, :email, :password, :role)]]></db:sql>
 			<db:input-parameters ><![CDATA[#[{
@@ -82,11 +105,11 @@ output application/json
     "role": payload.role
 }]]]></db:input-parameters>
 		</db:insert>
-		<logger level="INFO" doc:name="Logger" doc:id="916b4e03-ca0c-46e2-987d-49aef24af1e8" message="payload"/>
+		<logger level="INFO" doc:name="Logger" doc:id="43fee0d5-57ee-44fd-a21c-29453d4a390f" message="payload"/>
 	</flow>
-	<flow name="updateUser" doc:id="c04ffb68-cbd1-4151-9a63-e2c5ed2af7b6">
-		<http:listener doc:name="updateUSer" doc:id="2d8b92a4-1789-411d-a0b6-82416b32ffb0" config-ref="HTTP_Listener_config" path="/user/update"/>
-		<db:update doc:name="Update" doc:id="161fa261-edd6-4a68-b705-f1260adc888d" config-ref="MySQL">
+	<flow name="updateUser" doc:id="8e973a24-ce52-423a-bdd0-099833fa90e6">
+		<http:listener doc:name="updateUSer" doc:id="b2c9025a-9b5e-4ee2-87da-97e106aa084d" config-ref="HTTP_Listener_config" path="/user/update"/>
+		<db:update doc:name="Update" doc:id="5ef46785-86dd-47c1-ad44-8f851218781a" config-ref="MySQLConfig">
 			<db:sql ><![CDATA[update users set nom = :nom, 
 prenom = :prenom, 
 email = :email,  
@@ -100,26 +123,26 @@ role = :role where id = :id]]></db:sql>
     "role": payload.role
 }]]]></db:input-parameters>
 		</db:update>
-		<logger level="INFO" doc:name="Logger" doc:id="29b408e9-db30-4cc5-a9b7-980271aaa08a" message="#[payload]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="8218248e-c940-41f0-b01e-7e508c22c746" message="#[payload]"/>
 	</flow>
-	<flow name="deleteUser" doc:id="930284f2-7b24-434b-a966-6fb3034aa398">
-		<http:listener doc:name="Listener" doc:id="0dc96c9c-7a5f-4080-9ab6-4b35fe883cdf" config-ref="HTTP_Listener_config" path="/user/delete"/>
-		<db:delete doc:name="Delete" doc:id="1628c3f3-28fa-45c6-a29f-0bc9b635b181" config-ref="MySQL">
+	<flow name="deleteUser" doc:id="c8640772-6e8f-4d1c-9810-59ae9e859cc8">
+		<http:listener doc:name="Listener" doc:id="8f621809-ed50-4d44-8aeb-d11d4f2c8be0" config-ref="HTTP_Listener_config" path="/user/delete"/>
+		<db:delete doc:name="Delete" doc:id="916651e6-fba5-41e7-a073-40d11eed673e" config-ref="MySQLConfig">
 			<db:sql ><![CDATA[delete from users where id = :id]]></db:sql>
 			<db:input-parameters ><![CDATA[#[{
 	"id" : payload.id
 }]]]></db:input-parameters>
 		</db:delete>
-		<logger level="INFO" doc:name="Logger" doc:id="7d6abdb2-0127-4ab8-a258-0bbc769db058" message="#[payload]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="bf878e5a-e053-4f42-9eab-51b154d7a17a" message="#[payload]"/>
 	</flow>
-	<flow name="getAllProfessseurs" doc:id="fee29cbd-3404-4a4f-9ebf-8459d4f76c0a" >
-		<http:listener doc:name="Listener" doc:id="1edaea33-ba93-4375-b2d2-54d7ea7e313f" config-ref="HTTP_Listener_config" path="/professeurs"/>
-		<db:select doc:name="Select professeurs" doc:id="ca4e0321-b6b4-4895-9498-2b1afad30071" config-ref="MySQL">
+	<flow name="getAllProfessseurs" doc:id="d1541363-5dd0-4b0a-8a93-5426876158b5" >
+		<http:listener doc:name="Listener" doc:id="80cd3618-981e-472d-ac43-6642af8f4922" config-ref="HTTP_Listener_config" path="/professeurs"/>
+		<db:select doc:name="Select professeurs" doc:id="9f82a7cc-fe90-4db4-b6ea-8ae56c90a2ad" config-ref="MySQLConfig">
 			<db:sql><![CDATA[select * from users where role = 'professeur']]></db:sql>
 			<db:parameter-types />
 		</db:select>
-		<logger level="INFO" doc:name="Logger" doc:id="39c72e7e-9d11-4d5a-a1b1-b0870d9fa3ee" message="#[payload]"/>
-		<ee:transform doc:name="Transform Message" doc:id="c5d58f87-5e69-4ecc-b838-0187284fcd94" >
+		<logger level="INFO" doc:name="Logger" doc:id="e23a7f8d-fb89-4a06-88a2-f3b5b36290c5" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="95e3ce85-5823-4043-817b-5a6e04a851c2" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
@@ -134,19 +157,19 @@ payload map((item, index) -> {
 })]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="TRACE" doc:name="Logger" doc:id="55ff54e2-d010-42f0-a2ca-9be7321338a6" message="#[payload]"/>
+		<logger level="TRACE" doc:name="Logger" doc:id="c18da995-4173-41e8-9ad6-c16ffcbcbdb7" message="#[payload]"/>
 	</flow>
-	<flow name="findProfesseurById" doc:id="8c365a72-be35-4c4b-bfd0-70da581e8433" >
-		<http:listener doc:name="Listener" doc:id="12259b45-0025-409f-bd70-2be383524277" config-ref="HTTP_Listener_config" path="/professeurs/id" outputMimeType="application/json">
+	<flow name="findProfesseurById" doc:id="2fd6ec25-b449-43f4-a2ba-dd8eac49a22b" >
+		<http:listener doc:name="Listener" doc:id="eba9e9a0-5c17-472c-bb4c-5473d1405cf4" config-ref="HTTP_Listener_config" path="/professeurs/id" outputMimeType="application/json">
 		</http:listener>
-		<db:select doc:name="find professeur by id" doc:id="7ef7b0ea-e504-4e98-809b-0e09a8673c59" config-ref="MySQL">
+		<db:select doc:name="find professeur by id" doc:id="487ca91a-8d5f-4e4e-93fd-dc272e3200f5" config-ref="MySQLConfig">
 			<db:sql ><![CDATA[select * from users where role = 'professeur' and id = :id]]></db:sql>
 			<db:input-parameters ><![CDATA[#[{
 	"id": payload.id
 }]]]></db:input-parameters>
 		</db:select>
-		<logger level="INFO" doc:name="Logger" doc:id="0114e467-0d5a-4573-8bf8-636f04ea57c2" message="#[payload]"/>
-		<ee:transform doc:name="Transform Message" doc:id="4ac92eb5-4dcb-42c6-b6dc-d09f504ff6da" >
+		<logger level="INFO" doc:name="Logger" doc:id="73a12f20-d7f4-4b8c-a133-fbc268df1b7d" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="71cab9e4-b4b5-4292-9fc8-5c176f63435f" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
@@ -161,15 +184,15 @@ output application/json
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger" doc:id="c4d666bf-904d-4003-a208-3c514c7eac55" message="#[payload]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="8eb78366-2744-40c7-aca4-f0c99f1c4c7e" message="#[payload]"/>
 	</flow>
-	<flow name="getAllRegisseurs" doc:id="ac885abd-7ef2-41a8-855d-7a4ee70d9a2b">
-		<http:listener doc:name="Listener" doc:id="8979e672-9290-45fa-8bbe-d8ff71533245" config-ref="HTTP_Listener_config" path="/regisseurs" />
-		<db:select doc:name="Select all regisseurs" doc:id="0b7a1cdc-12e2-46ac-802c-26d8b4ac8377" config-ref="MySQL">
+	<flow name="getAllRegisseurs" doc:id="398e877f-8119-4fe6-a40a-6c08f7d68936">
+		<http:listener doc:name="Listener" doc:id="2e177cb2-5e90-4a3a-a5d5-79b1bf09a3d5" config-ref="HTTP_Listener_config" path="/regisseurs" />
+		<db:select doc:name="Select all regisseurs" doc:id="2468a414-0bef-4ba2-995a-7c65e2f404ec" config-ref="MySQLConfig">
 			<db:sql><![CDATA[select * from users where role = 'regisseur']]></db:sql>
 		</db:select>
-		<logger level="INFO" doc:name="Logger" doc:id="04ca0037-207c-4b8f-bdc1-23aa667208ca" message="#[payload]"/>
-		<ee:transform doc:name="Transform Message" doc:id="bc55be3f-9788-4588-9f9b-e6b1827ec708" >
+		<logger level="INFO" doc:name="Logger" doc:id="bde665b0-b451-4118-89ce-c3d6f3519a68" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="6d6fcba8-7416-4604-912a-1a483c5d5439" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
@@ -184,18 +207,18 @@ payload map((item, index) -> {
 })]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger1" doc:id="256385f9-f037-4e2d-87f5-2e6afe13456b" message="#[payload]" />
+		<logger level="INFO" doc:name="Logger1" doc:id="4c6347ac-7a28-4dd8-a984-ce61d4d3a55a" message="#[payload]" />
 	</flow>
-	<flow name="findRegisseurById" doc:id="fc2f1e05-677e-45db-8341-e38769416725" >
-		<http:listener doc:name="Listener" doc:id="2eccfaa7-65ea-46df-9633-bafb35658863" config-ref="HTTP_Listener_config" path="/regisseurs/id"/>
-		<db:select doc:name="find regisseur by id" doc:id="6e569ca3-8c10-4cdc-8071-67ba6ed02266" config-ref="MySQL" >
+	<flow name="findRegisseurById" doc:id="e3eb26f2-0c96-4dd3-8213-48761ebff6fb" >
+		<http:listener doc:name="Listener" doc:id="c9633f5c-5aef-4c3b-b1bb-8e8c14b95662" config-ref="HTTP_Listener_config" path="/regisseurs/id"/>
+		<db:select doc:name="find regisseur by id" doc:id="100e3b38-322f-4f3c-9546-23e5d8885098" config-ref="MySQLConfig" >
 			<db:sql ><![CDATA[select * from users where role = 'regisseur' and id = :id]]></db:sql>
 			<db:input-parameters ><![CDATA[#[{
 	"id": payload.id
 }]]]></db:input-parameters>
 		</db:select>
-		<logger level="INFO" doc:name="Logger" doc:id="f7c80044-8fe4-4f56-9476-78409ddfd7ab" message="#[payload]" />
-		<ee:transform doc:name="Transform Message" doc:id="f68df56c-9c70-407d-9fe9-17a89d1598b9" >
+		<logger level="INFO" doc:name="Logger" doc:id="5e0a015c-99c1-48d5-9371-073db153dff1" message="#[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="26645deb-3689-4ca2-9ddf-c8429642281c" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
@@ -210,15 +233,15 @@ output application/json
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger1" doc:id="395135ad-d8bc-41b3-b08a-94c621d84210" message="#[payload]" />
+		<logger level="INFO" doc:name="Logger1" doc:id="8b9224f7-7dc9-4ff6-bf32-0418467de0cb" message="#[payload]" />
 	</flow>
-	<flow name="getAllChefImms" doc:id="94fcea10-fdcf-4412-bea0-bb5d1b76ee95">
-		<http:listener doc:name="Listener" doc:id="3d3c4fe7-1493-4907-babd-807d43932e64" config-ref="HTTP_Listener_config" path="/chef-imm" />
-		<db:select doc:name="Select all Chefs Immediats" doc:id="ce6ffb2c-1d61-4d61-9424-e4a2ede274f8" config-ref="MySQL">
+	<flow name="getAllChefImms" doc:id="f1e1f5cc-4937-4ed1-947f-d8baecac8ea3">
+		<http:listener doc:name="Listener" doc:id="f7285b19-2b0b-4c0d-984e-5c476c2f8eb3" config-ref="HTTP_Listener_config" path="/chef-imm" />
+		<db:select doc:name="Select all Chefs Immediats" doc:id="71a5b189-4034-4fa7-89a8-4a14424cadc0" config-ref="MySQLConfig">
 			<db:sql><![CDATA[select * from users where role = 'chef imm']]></db:sql>
 		</db:select>
-		<logger level="INFO" doc:name="Logger" doc:id="a11b80aa-1533-415d-995c-8250a6343b6d" message="#[payload]" />
-		<ee:transform doc:name="Transform Message" doc:id="6c2b6094-a38e-4b79-8cd6-7dac96862c98" >
+		<logger level="INFO" doc:name="Logger" doc:id="81b976e0-c634-422d-9d00-da97491a32c9" message="#[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="afbe3162-dd23-4243-a386-6fe7a1602dee" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
@@ -233,19 +256,19 @@ payload map((item, index) -> {
 })]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger1" doc:id="e5f5ebc0-6829-4520-b612-86e82e199ced" message="#[payload]" />
+		<logger level="INFO" doc:name="Logger1" doc:id="99712b0e-a1ab-422f-a10b-8844ed1c246b" message="#[payload]" />
 	</flow>
-	<flow name="findChefImmById" doc:id="09288571-88e0-4bb8-94fa-8a78511f6641">
-		<http:listener doc:name="Listener" doc:id="22d7fc81-96a2-4497-8296-28b2dd1a41e5" config-ref="HTTP_Listener_config" path="/chef-imm/id" outputMimeType="application/json">
+	<flow name="findChefImmById" doc:id="2eee2db6-185a-418b-98a4-958457df486d">
+		<http:listener doc:name="Listener" doc:id="8e5c7349-c2ba-40dd-97a1-24c8ae7ec2ca" config-ref="HTTP_Listener_config" path="/chef-imm/id" outputMimeType="application/json">
 		</http:listener>
-		<db:select doc:name="find chef immediat by id" doc:id="0303416e-4c13-4e2c-ba4e-38c0b8b0a9f6" config-ref="MySQL">
+		<db:select doc:name="find chef immediat by id" doc:id="52b449b0-c3d5-41da-bb06-c200f3e9b73e" config-ref="MySQLConfig">
 			<db:sql><![CDATA[select * from users where role = 'chef imm' and id = :id]]></db:sql>
 			<db:input-parameters><![CDATA[#[{
 	"id": payload.id
 }]]]></db:input-parameters>
 		</db:select>
-		<logger level="INFO" doc:name="Logger" doc:id="04583152-edba-47ee-b70a-02552db0fb39" message="#[payload]" />
-		<ee:transform doc:name="Transform Message" doc:id="6bd37743-916a-4ec0-9192-c98cd9a23c81">
+		<logger level="INFO" doc:name="Logger" doc:id="4e109fe5-1da3-490f-8af2-94ea463c83cf" message="#[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="29e7d838-c4ac-4eca-9b48-2e7919868df1">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -260,15 +283,15 @@ output application/json
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger1" doc:id="95e2ab22-5e3a-4f5a-b235-0e350bbd2a9c" message="#[payload]" />
+		<logger level="INFO" doc:name="Logger1" doc:id="5b349544-11b0-4288-aca4-ef6162760cef" message="#[payload]" />
 	</flow>
-	<flow name="getAllAdministrations" doc:id="24fb7de2-0368-4588-b264-22161e44659e">
-		<http:listener doc:name="Listener" doc:id="b6d65451-bae1-496b-8e0c-dc1a9988260e" config-ref="HTTP_Listener_config" path="/admins" />
-		<db:select doc:name="Select all admins" doc:id="756f2150-7284-4aac-bf15-565301b24d47" config-ref="MySQL">
+	<flow name="getAllAdministrations" doc:id="e211bf12-a9b5-497a-b65e-d727b50705f5">
+		<http:listener doc:name="Listener" doc:id="ebb10eb5-6e6f-4703-8bcf-ffcefc12b48a" config-ref="HTTP_Listener_config" path="/admins" />
+		<db:select doc:name="Select all admins" doc:id="9fcc69d2-d561-4e9c-830a-8830f4da9c61" config-ref="MySQLConfig">
 			<db:sql><![CDATA[select * from users where role = 'admin']]></db:sql>
 		</db:select>
-		<logger level="INFO" doc:name="Logger" doc:id="fa21a265-b7da-4741-9ee7-105e599adef6" message="#[payload]" />
-		<ee:transform doc:name="Transform Message" doc:id="6e6d7ce6-3359-45d3-b7cc-11d1f6cdbdd2" >
+		<logger level="INFO" doc:name="Logger" doc:id="e1d7f28d-f84f-4703-9cee-461e14f487a7" message="#[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="6712fe6a-a9f1-4834-8613-93429830e918" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
@@ -283,18 +306,18 @@ payload map((item, index) -> {
 })]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger1" doc:id="b6e84f2d-d34a-4d73-bd85-00d8a4d4739d" message="#[payload]" />
+		<logger level="INFO" doc:name="Logger1" doc:id="5a04d215-e062-4b16-9da0-dc2b98000968" message="#[payload]" />
 	</flow>
-	<flow name="findAdminById" doc:id="d9922d51-e5a1-46ff-8de2-1a5af4ac7ffa" >
-		<http:listener doc:name="Listener" doc:id="c162ff9b-0faf-4622-b822-70ab0caa591b" config-ref="HTTP_Listener_config" path="/admins/id"/>
-		<db:select doc:name="find admin by id" doc:id="5e91840a-aec1-4306-8bf3-648baf730564" config-ref="MySQL" >
+	<flow name="findAdminById" doc:id="b649809b-8c14-4e95-9845-592def10d62f" >
+		<http:listener doc:name="Listener" doc:id="1dec873e-9c4e-4234-ac7c-bd2b9153d22f" config-ref="HTTP_Listener_config" path="/admins/id"/>
+		<db:select doc:name="find admin by id" doc:id="76302190-d5f2-40d0-a77b-c0ef437d8c9d" config-ref="MySQLConfig" >
 			<db:sql ><![CDATA[select * from users where role = 'admin' and id = :id]]></db:sql>
 			<db:input-parameters ><![CDATA[#[{
 	"id": payload.id
 }]]]></db:input-parameters>
 		</db:select>
-		<logger level="INFO" doc:name="Logger" doc:id="0a49c3aa-71c8-4684-8684-df35189ab926" message="#[payload]" />
-		<ee:transform doc:name="Transform Message" doc:id="3c179da2-5f08-4f3f-9c31-f48e22d83d97" >
+		<logger level="INFO" doc:name="Logger" doc:id="11c8aa04-0431-4591-96cd-7645213a917c" message="#[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="1dd4f704-6b3b-4890-bc9f-502bf170bad0" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
@@ -309,19 +332,19 @@ output application/json
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger1" doc:id="bbfdee55-06a2-4f9f-85a8-a87e8186c119" message="#[payload]" />
+		<logger level="INFO" doc:name="Logger1" doc:id="3aab7de3-f695-4fb5-b617-80ea8a41fdcf" message="#[payload]" />
 	</flow>
-	<flow name="getAllMissions" doc:id="2cb6b216-a71a-43e9-93ab-29ee654053fa" >
-		<http:listener doc:name="Listener" doc:id="bc3c625e-1703-4ede-9cdc-c06e9dbe0572" config-ref="HTTP_Listener_config" path="/missions"/>
-		<db:select doc:name="Select all missions" doc:id="5b591483-7a88-402e-a198-c35a352ea64c" config-ref="MySQL">
+	<flow name="getAllMissions" doc:id="4416ef8f-d438-4a7d-8545-1cee7f756d5f" >
+		<http:listener doc:name="Listener" doc:id="5734c377-9b7f-42c9-95a0-a2573f4a261f" config-ref="HTTP_Listener_config" path="/missions"/>
+		<db:select doc:name="Select all missions" doc:id="a2f0f47a-8a81-4d89-a663-dadd9f495993" config-ref="MySQLConfig">
 			<db:sql><![CDATA[select d.id, u.id as id_professeur, u.nom, u.prenom, destination,
 d.description, dateDepartPrevu, dateRetourPrevu , d.statut 
 from demande_mission d join users u
 on d.id_professeur = u.id
 where u.role = 'professeur']]></db:sql>
 		</db:select>
-		<logger level="INFO" doc:name="Logger" doc:id="9bcce4a9-51d4-454a-9b7c-9c45fc940114" message="#[payload]" />
-		<ee:transform doc:name="Transform Message" doc:id="a19f6eeb-5aa6-467e-8bc7-193427e55537" >
+		<logger level="INFO" doc:name="Logger" doc:id="efd2f6bd-3f07-4fed-ba18-bc0c49629b63" message="#[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="7c225631-5077-459a-b4ae-6884753eca25" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
@@ -343,11 +366,11 @@ payload map((item, index) -> {
 ]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger1" doc:id="ac27128c-1769-4105-a137-b4292392fd93" message="#[payload]" />
+		<logger level="INFO" doc:name="Logger1" doc:id="6daff090-41c6-4a01-8742-bd9d6734da7e" message="#[payload]" />
 	</flow>
-	<flow name="getMissionById" doc:id="c8a71efa-c2ca-4587-afc5-71fd0eb9e7ee">
-		<http:listener doc:name="Listener" doc:id="e735b3a6-7d3f-4570-9251-88c84e5f33e9" config-ref="HTTP_Listener_config" path="/missions/id" />
-		<db:select doc:name="find mission by id" doc:id="4418930a-9171-4668-9bcc-9fffa46dbd1d" config-ref="MySQL">
+	<flow name="getMissionById" doc:id="9ca1f062-3b46-4f3d-96b7-956a05421c82">
+		<http:listener doc:name="Listener" doc:id="17d9f793-fe95-4901-8fd1-2ebfde6f5b45" config-ref="HTTP_Listener_config" path="/missions/id" />
+		<db:select doc:name="find mission by id" doc:id="edf61684-93e4-4405-8b14-8174ef05ab1e" config-ref="MySQLConfig">
 			<db:sql><![CDATA[select d.id, u.id as id_professeur, u.nom, u.prenom, destination,
 d.description, dateDepartPrevu, dateRetourPrevu , d.statut 
 from demande_mission d join users u
@@ -358,8 +381,8 @@ and d.id = :id]]></db:sql>
 	"id": payload.id
 }]]]></db:input-parameters>
 		</db:select>
-		<logger level="INFO" doc:name="Logger" doc:id="31bde69f-b088-48c9-9f62-e34a9777377d" message="#[payload]" />
-		<ee:transform doc:name="Transform Message" doc:id="453379c6-0f8b-443a-a9ad-4c3904b5d0df">
+		<logger level="INFO" doc:name="Logger" doc:id="23146f66-0017-4562-8950-e5bc59b1f753" message="#[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="068e10dd-ee20-4d8c-9a98-6e3de7c32816">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -380,11 +403,11 @@ output application/json
 ]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger1" doc:id="1e68f8e0-cfaf-4c44-912f-024cfa659b81" message="#[payload]" />
+		<logger level="INFO" doc:name="Logger1" doc:id="419cd723-6df3-4519-8da8-3edc01716183" message="#[payload]" />
 	</flow>
-	<flow name="findMissionsByProfesseurId" doc:id="19fe7ce8-84c7-454b-8ffd-30487a4e41d1" >
-		<http:listener doc:name="Listener" doc:id="94ab755f-43fe-4063-bac1-6cd5bafa4c00" config-ref="HTTP_Listener_config" path="/missions/professeur/id"/>
-		<db:select doc:name="find missions by professor id" doc:id="e1204f0d-cc11-47f9-a272-fea96748cc7c" config-ref="MySQL" >
+	<flow name="findMissionsByProfesseurId" doc:id="549141c4-53f9-4d85-9ad9-b6d1fa633077" >
+		<http:listener doc:name="Listener" doc:id="3443c617-123f-4cd7-921d-378bbf382452" config-ref="HTTP_Listener_config" path="/missions/professeur/id"/>
+		<db:select doc:name="find missions by professor id" doc:id="adb469b3-7de3-4818-a4b4-2e364f8d5822" config-ref="MySQLConfig" >
 			<db:sql ><![CDATA[select d.id, u.id as id_professeur, u.nom, u.prenom, destination,
 d.description, dateDepartPrevu, dateRetourPrevu , d.statut 
 from demande_mission d join users u
@@ -395,8 +418,8 @@ and u.id = :id]]></db:sql>
 	"id": payload.id
 }]]]></db:input-parameters>
 		</db:select>
-		<logger level="INFO" doc:name="Logger" doc:id="cae52948-d521-4e29-98eb-e9161a715e7f" message="#[payload]" />
-		<ee:transform doc:name="Transform Message" doc:id="ef9af0f5-042c-4fa4-bbc5-1242360a46c5" >
+		<logger level="INFO" doc:name="Logger" doc:id="8f69b761-d52e-43c7-bc68-4d16d254b2b8" message="#[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="b8588c64-d266-4504-9106-b14fcc30cc6e" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
@@ -418,11 +441,11 @@ payload map((item, index) -> {
 ]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger1" doc:id="10e8be7e-ad4b-48bc-b45b-8e0faead2e11" message="#[payload]" />
+		<logger level="INFO" doc:name="Logger1" doc:id="f0c43332-d1e8-48e5-a6c9-0157cce280e3" message="#[payload]" />
 	</flow>
-	<flow name="insertMission" doc:id="1b5195ef-c251-4f56-8c0b-9d94b931e760" >
-		<http:listener doc:name="Listener" doc:id="689c44a1-5b3b-444b-b821-1a22998cdb77" config-ref="HTTP_Listener_config" path="/missions/add"/>
-		<db:insert doc:name="Insert" doc:id="2bb135eb-37b7-42a3-8f44-cdfcdc15829f" config-ref="MySQL">
+	<flow name="insertMission" doc:id="5f1a63b7-662a-4f70-a439-8768f29bcc8b" >
+		<http:listener doc:name="Listener" doc:id="66ca8958-9a4c-429d-90c0-740b8b12eb6b" config-ref="HTTP_Listener_config" path="/missions/add"/>
+		<db:insert doc:name="Insert" doc:id="beff366e-0d60-4222-bddc-fc33f473c821" config-ref="MySQLConfig">
 			<db:sql ><![CDATA[insert into demande_mission 
 (id_professeur, 
     dateDepartPrevu, 
@@ -457,11 +480,11 @@ values
     "statut_remboursement" : payload.statut_remboursement
 }]]]></db:input-parameters>
 		</db:insert>
-		<logger level="INFO" doc:name="Logger" doc:id="139daf23-d4c7-4c15-94ca-7d69ca732775" message="#[payload]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="efbebcb4-9ce3-4ba1-bc1e-27a781281fee" message="#[payload]"/>
 	</flow>
-	<flow name="updateMission" doc:id="fcf92d8e-9b56-4241-8934-ffaa8546c7ec" >
-		<http:listener doc:name="Listener" doc:id="952271d6-4d9e-4811-93c7-964daac473d1" config-ref="HTTP_Listener_config" path="/missions/update"/>
-		<db:update doc:name="Update" doc:id="79dc1f15-3998-4120-9ced-38159fdc2fc7" config-ref="MySQL">
+	<flow name="updateMission" doc:id="8c8317bc-6029-4fe1-9965-8b36d3cf4950" >
+		<http:listener doc:name="Listener" doc:id="55eb9a0c-0a2b-405c-8911-a544951d0b13" config-ref="HTTP_Listener_config" path="/missions/update"/>
+		<db:update doc:name="Update" doc:id="2c2bca83-b262-4383-900e-6e7f4be504b5" config-ref="MySQLConfig">
 			<db:sql ><![CDATA[update demande_mission set
  and id_professeur = :id_professeur
  and dateDepartPrevu = :dateDepartPrevu
@@ -486,11 +509,11 @@ values
     "statut_remboursement" : payload.statut_remboursement
 }]]]></db:input-parameters>
 		</db:update>
-		<logger level="INFO" doc:name="Logger" doc:id="ae6da818-b072-48ef-8460-8ebf3e43a419" message="#[payload]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="22d33dbc-5799-4044-b9c1-2f3c6ecc06c5" message="#[payload]"/>
 	</flow>
-	<flow name="updateDateHeureRetourEffectiveMission" doc:id="fd588083-db54-43bf-ae67-8f64adea2223" >
-		<http:listener doc:name="Listener" doc:id="923c9668-2bd1-48c9-9571-0e857fff0ec3" config-ref="HTTP_Listener_config" path="/missions/update/retour"/>
-		<db:update doc:name="Update" doc:id="11ac3ca5-2898-4db4-96ec-beeb67a4c404" config-ref="MySQL">
+	<flow name="updateDateHeureRetourEffectiveMission" doc:id="d06d4738-909e-413c-ad86-fade71dc87dd" >
+		<http:listener doc:name="Listener" doc:id="8ae0f41a-030e-4e62-9442-7e278fad01cc" config-ref="HTTP_Listener_config" path="/missions/update/retour"/>
+		<db:update doc:name="Update" doc:id="fa5f4ef1-8739-478d-af09-42193b3a7c91" config-ref="MySQLConfig">
 			<db:sql ><![CDATA[update demande_mission set dateRetourReel = :dateRetourReel
     where id = :id]]></db:sql>
 			<db:input-parameters ><![CDATA[#[{
@@ -498,21 +521,21 @@ values
     "dateRetourReel" : payload.dateRetourReel
 }]]]></db:input-parameters>
 		</db:update>
-		<logger level="INFO" doc:name="Logger" doc:id="22276670-5ff5-47b5-aa55-20c84ba012fc" message="#[payload]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="fe495e65-94a8-4385-88d6-05094e1d4480" message="#[payload]"/>
 	</flow>
-	<flow name="deleteMission" doc:id="b5cbc868-44f4-40d4-a520-5cbfd0978c4a" >
-		<http:listener doc:name="Listener" doc:id="a30184a7-4759-451c-b812-253bf7383287" config-ref="HTTP_Listener_config" path="/missions/delete"/>
-		<db:delete doc:name="Delete" doc:id="6b74060d-01aa-4d56-9959-6e68286853a2" config-ref="MySQL">
+	<flow name="deleteMission" doc:id="427a2bed-3350-4b94-9365-66df2c194822" >
+		<http:listener doc:name="Listener" doc:id="b825ee01-17b9-47c5-a157-abff99bc332f" config-ref="HTTP_Listener_config" path="/missions/delete"/>
+		<db:delete doc:name="Delete" doc:id="11d86857-7f11-4414-aba1-2350b47c6073" config-ref="MySQLConfig">
 			<db:sql ><![CDATA[delete from demande_mission where id = :id]]></db:sql>
 			<db:input-parameters ><![CDATA[#[{
 	"id" : payload.id
 }]]]></db:input-parameters>
 		</db:delete>
-		<logger level="INFO" doc:name="Logger" doc:id="b506ad97-5978-4848-876e-dc00ff10c448" message="#[payload]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="4f5384cf-e2d3-4e99-a3bf-c1caa93fe9b6" message="#[payload]"/>
 	</flow>
-	<flow name="valid1Mission" doc:id="44f1bca6-2aab-4555-ad23-16554705e198" >
-		<http:listener doc:name="Listener" doc:id="11bbada2-1173-4989-ab80-2c4c53c59080" config-ref="HTTP_Listener_config" path="/missions/chef-imm/validation"/>
-		<db:update doc:name="Update" doc:id="741dac2a-6e6e-4c17-973a-bfe554b31c02" config-ref="MySQL">
+	<flow name="valid1Mission" doc:id="d84d2c12-c794-4bdb-8fc6-ea8803cbf756" >
+		<http:listener doc:name="Listener" doc:id="cc90ed73-13a5-41f5-8acc-82318ff0f0d5" config-ref="HTTP_Listener_config" path="/missions/chef-imm/validation"/>
+		<db:update doc:name="Update" doc:id="f1674548-6f01-40bd-a2dc-3d7f39615ceb" config-ref="MySQLConfig">
 			<db:sql ><![CDATA[update demande_mission set statut = :statut
 where id = :id and statut = "pending"]]></db:sql>
 			<db:input-parameters ><![CDATA[#[{
@@ -520,11 +543,11 @@ where id = :id and statut = "pending"]]></db:sql>
     "statut" : payload.statut
 }]]]></db:input-parameters>
 		</db:update>
-		<logger level="INFO" doc:name="Logger" doc:id="6a816b5e-a3ca-4d39-a0e0-fa551c3eae45" message="#[payload]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="ee824acd-5b3b-40ca-8b8e-abdc6c12e8e9" message="#[payload]"/>
 	</flow>
-	<flow name="valid2Mission" doc:id="5d1503c4-d09d-4fd4-8e31-6ccd5d1cf28c" >
-		<http:listener doc:name="Listener" doc:id="66167376-14e6-442e-8cdc-9fb48240cb5a" config-ref="HTTP_Listener_config" path="/missions/regisseur/validation"/>
-		<db:update doc:name="Update" doc:id="edd41bf2-234f-43d7-9e46-7eb6e19aeefd" config-ref="MySQL">
+	<flow name="valid2Mission" doc:id="a3a69fc4-4e18-4946-b6f6-bfe99d6b0b3b" >
+		<http:listener doc:name="Listener" doc:id="ed42e67b-8323-47c0-908b-f3983d7aab08" config-ref="HTTP_Listener_config" path="/missions/regisseur/validation"/>
+		<db:update doc:name="Update" doc:id="7f0c4297-a2d1-425a-bfd3-4bf3e047ad4f" config-ref="MySQLConfig">
 			<db:sql ><![CDATA[update demande_mission set statut = :statut
 where id = :id and statut = "valid1"]]></db:sql>
 			<db:input-parameters ><![CDATA[#[{
@@ -532,11 +555,11 @@ where id = :id and statut = "valid1"]]></db:sql>
     "statut" : payload.statut
 }]]]></db:input-parameters>
 		</db:update>
-		<logger level="INFO" doc:name="Logger" doc:id="3e85469f-290b-42d3-9eb7-7d2f240b48d6" message="#[payload]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="b550e98d-6564-4eda-902a-8fab61c9bec6" message="#[payload]"/>
 	</flow>
-	<flow name="insertTransport" doc:id="c39d41f7-5aae-481e-84a4-b51f5d039f1d" >
-		<http:listener doc:name="Listener" doc:id="8c8035bc-7975-4330-9464-272c5c9e730d" config-ref="HTTP_Listener_config" path="/missions/add/transport"/>
-		<db:insert doc:name="Insert" doc:id="4f1dbaae-f7d2-4a97-ae92-9bd5fe8d52cb" config-ref="MySQL">
+	<flow name="insertTransport" doc:id="59377230-26f2-439a-b1e5-ed024db75c33" >
+		<http:listener doc:name="Listener" doc:id="23e206f2-f20c-4a3d-a7e7-ef13f31667b0" config-ref="HTTP_Listener_config" path="/missions/add/transport"/>
+		<db:insert doc:name="Insert" doc:id="81fa1b68-8df8-48ac-9279-6596f2004489" config-ref="MySQLConfig">
 			<db:sql ><![CDATA[insert into 
       transport (
         code_mission, 
@@ -558,19 +581,19 @@ where id = :id and statut = "valid1"]]></db:sql>
     "nbr_passager" : payload.nbr_passager
 }]]]></db:input-parameters>
 		</db:insert>
-		<logger level="INFO" doc:name="Logger" doc:id="3d2253f0-6792-46ec-97ab-84945a6d3978" message="#[payload]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="dca48e62-558f-4243-b34c-85eeae102daa" message="#[payload]"/>
 	</flow>
-	<flow name="getAllRemboursement" doc:id="ce1e928d-640b-4dd3-9ce7-46cea5e1d4f8" >
-		<http:listener doc:name="Listener" doc:id="650e57cf-ceb0-4722-b786-1a95145e00e3" config-ref="HTTP_Listener_config" path="/remboursements" />
-		<db:select doc:name="Select all remboursement" doc:id="bb04cb99-c7a3-44d1-b517-80a3a3421264" config-ref="MySQL" >
+	<flow name="getAllRemboursement" doc:id="3711c866-b8d7-4cbf-954b-7ccb00aaf292" >
+		<http:listener doc:name="Listener" doc:id="63244132-25cd-41fb-bbd2-4bc19b16cd75" config-ref="HTTP_Listener_config" path="/remboursements" />
+		<db:select doc:name="Select all remboursement" doc:id="50395f40-782a-4196-9596-cf237840409f" config-ref="MySQLConfig" >
 			<db:sql ><![CDATA[select d.id, d.code_mission, u.id as id_professeur, u.nom, u.prenom, frais, 
 budgetInitial, montantRembourse, validationFrais, validation, statut
 from demande_remboursement d join users u
 on d.id = u.id
 where u.role = 'professeur']]></db:sql>
 		</db:select>
-		<logger level="INFO" doc:name="Logger" doc:id="52aaa2a9-d8bb-4133-af6a-57645112ffb6" message="#[payload]" />
-		<ee:transform doc:name="Transform Message" doc:id="36f42782-9675-4632-bf08-69937cf7bf85" >
+		<logger level="INFO" doc:name="Logger" doc:id="7137c508-e586-403b-ac9a-a20c9319ce77" message="#[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="de7764f9-3fb1-4dfd-9b0a-5cdd5f864931" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
@@ -594,11 +617,11 @@ payload map((item, index) -> {
 ]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger1" doc:id="e265c747-3868-48d9-b0e6-bf74c4f1dc89" message="#[payload]" />
+		<logger level="INFO" doc:name="Logger1" doc:id="6fe6093a-bcdb-4a0f-889e-1eabd0631d5a" message="#[payload]" />
 	</flow>
-	<flow name="getRemboursementById" doc:id="e876088c-a99e-4927-a73e-e21432614e0d" >
-		<http:listener doc:name="Listener" doc:id="576da98e-a87b-4971-8039-021e68691a5b" config-ref="HTTP_Listener_config" path="/remboursements/id" />
-		<db:select doc:name="find remboursement by id" doc:id="7bee7896-1c4e-443d-b3e1-9517efe9898e" config-ref="MySQL" >
+	<flow name="getRemboursementById" doc:id="76ca119d-28b9-4bf8-b70a-359a75043417" >
+		<http:listener doc:name="Listener" doc:id="c328049c-c6be-4832-adad-eb86af1f58a2" config-ref="HTTP_Listener_config" path="/remboursements/id" />
+		<db:select doc:name="find remboursement by id" doc:id="d8df9275-080d-4923-b9b2-81da2b27dc7e" config-ref="MySQLConfig" >
 			<db:sql ><![CDATA[select d.id, d.code_mission, u.id as id_professeur, u.nom, u.prenom, frais, 
 budgetInitial, montantRembourse, validationFrais, validation, statut
 from demande_remboursement d join users u
@@ -609,8 +632,8 @@ and d.id = :id]]></db:sql>
 	"id": payload.id
 }]]]></db:input-parameters>
 		</db:select>
-		<logger level="INFO" doc:name="Logger" doc:id="f37d8f70-64d8-4d17-a101-c1738956774b" message="#[payload]" />
-		<ee:transform doc:name="Transform Message" doc:id="6038d58e-9e48-4480-8016-f451e580f85f" >
+		<logger level="INFO" doc:name="Logger" doc:id="d1b0b3d9-7f6f-4884-a300-6b9029e3c50d" message="#[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="d8add408-d7f1-4055-9e44-c047598b86a7" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
@@ -634,11 +657,11 @@ output application/json
 ]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger1" doc:id="1377f17d-565d-4f7d-8d22-0def49d3e875" message="#[payload]" />
+		<logger level="INFO" doc:name="Logger1" doc:id="77ca55e4-482e-4e1f-95d6-71eeb50571a9" message="#[payload]" />
 	</flow>
-	<flow name="findRemboursementsByProfesseurId" doc:id="6f7f62af-81c6-4e0e-b446-43ffe6233e12" >
-		<http:listener doc:name="Listener" doc:id="d32d9da7-3c7d-4d4a-bf04-5d485250c8b4" config-ref="HTTP_Listener_config" path="/remboursements/professeur/id" />
-		<db:select doc:name="find remboursements by professor id" doc:id="cf774966-889a-4a4f-a9ac-87183ef3a29e" config-ref="MySQL" >
+	<flow name="findRemboursementsByProfesseurId" doc:id="b4481feb-a09f-40ac-84db-8d9f6e5aeea7" >
+		<http:listener doc:name="Listener" doc:id="db3acdcc-1038-4c42-883f-acff8881632a" config-ref="HTTP_Listener_config" path="/remboursements/professeur/id" />
+		<db:select doc:name="find remboursements by professor id" doc:id="cda10ba4-1900-4934-bba4-ef08336ed2b4" config-ref="MySQLConfig" >
 			<db:sql ><![CDATA[select d.id, d.code_mission, u.id as id_professeur, u.nom, u.prenom, frais, 
 budgetInitial, montantRembourse, validationFrais, validation, statut
 from demande_remboursement d join users u
@@ -649,8 +672,8 @@ and u.id = :id]]></db:sql>
 	"id": payload.id
 }]]]></db:input-parameters>
 		</db:select>
-		<logger level="INFO" doc:name="Logger" doc:id="11da5222-a118-46e0-9133-82ca8363c721" message="#[payload]" />
-		<ee:transform doc:name="Transform Message" doc:id="3b3a32ff-e391-444a-8a91-7bc7da33c6da" >
+		<logger level="INFO" doc:name="Logger" doc:id="a86bba1f-48e0-4ab3-ad8a-be83fe282d2b" message="#[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="73740742-cbbc-4d5c-a320-83984eea18c6" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
@@ -674,11 +697,11 @@ payload map((item, index) -> {
 ]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger1" doc:id="386c2abb-84f4-4967-a7f2-8d476c546724" message="#[payload]" />
+		<logger level="INFO" doc:name="Logger1" doc:id="afd8f048-bdb9-4435-ab8c-f204e780a6d1" message="#[payload]" />
 	</flow>
-	<flow name="findRemboursementsByMissionId" doc:id="f4fe6d0a-4183-4b16-9ffe-06e8b829ff68" >
-		<http:listener doc:name="Listener" doc:id="eb676e62-f9ae-438f-adba-88fe54ea65f6" config-ref="HTTP_Listener_config" path="/remboursements/mission/id" />
-		<db:select doc:name="find remboursement by mission id" doc:id="a8912519-bbb9-4ff9-b7c7-b8b1e3508f9e" config-ref="MySQL" >
+	<flow name="findRemboursementsByMissionId" doc:id="9c5e4d20-19ac-41d0-9ac1-b55eb2c2f75a" >
+		<http:listener doc:name="Listener" doc:id="774720fe-0f7c-41d9-9b27-0dc661c2c106" config-ref="HTTP_Listener_config" path="/remboursements/mission/id" />
+		<db:select doc:name="find remboursement by mission id" doc:id="835c6753-4839-4862-9f31-d381fc152ac3" config-ref="MySQLConfig" >
 			<db:sql ><![CDATA[select d.id, d.code_mission, u.id as id_professeur, u.nom, u.prenom, frais, 
 budgetInitial, montantRembourse, validationFrais, validation, statut
 from demande_remboursement d join users u
@@ -689,8 +712,8 @@ and d.code_mission = :id]]></db:sql>
 	"id": payload.id
 }]]]></db:input-parameters>
 		</db:select>
-		<logger level="INFO" doc:name="Logger" doc:id="5f694730-b04b-446b-bbff-760068223c08" message="#[payload]" />
-		<ee:transform doc:name="Transform Message" doc:id="1e01a3b3-37ce-4b4d-a265-19e4c76b4658" >
+		<logger level="INFO" doc:name="Logger" doc:id="a8bde3ee-9597-4dce-ae3f-f82518223d7e" message="#[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="d79e2a0b-54f0-494e-9f7e-223a94c60deb" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
@@ -712,11 +735,11 @@ payload map((item, index) -> {
 ]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger1" doc:id="af43cbd2-5dc7-4bd3-926d-da0614bcf708" message="#[payload]" />
+		<logger level="INFO" doc:name="Logger1" doc:id="8d18a59a-5dab-45b1-9321-b1e5c3ab2e46" message="#[payload]" />
 	</flow>
-	<flow name="insertRemboursement" doc:id="0c3526ea-e9b0-4763-a826-9a9e62a06a1e">
-		<http:listener doc:name="Listener" doc:id="0b6f2555-2439-4031-92a4-5c6cc900baf8" config-ref="HTTP_Listener_config" path="/remboursements/add"/>
-		<db:insert doc:name="Insert" doc:id="c0c0ca87-d2fb-487c-964d-49c7d08370a0" config-ref="MySQL">
+	<flow name="insertRemboursement" doc:id="ecad4086-3ff1-4be5-a932-18470cfedd20">
+		<http:listener doc:name="Listener" doc:id="48184863-4ee6-4ae4-83e7-6bb8036e0b5d" config-ref="HTTP_Listener_config" path="/remboursements/add"/>
+		<db:insert doc:name="Insert" doc:id="e215dba9-4b43-4f63-9f55-26f723361834" config-ref="MySQLConfig">
 			<db:sql ><![CDATA[insert into 
   demande_remboursement (
     code_mission, 
@@ -750,11 +773,11 @@ values
         "statut" : payload.statut
 }]]]></db:input-parameters>
 		</db:insert>
-		<logger level="INFO" doc:name="Logger" doc:id="b50cea33-21d9-41e7-a5c3-3edd1cdabe62" />
+		<logger level="INFO" doc:name="Logger" doc:id="611da544-0227-450d-a103-45931b522928" />
 	</flow>
-	<flow name="updateRemboursement" doc:id="65efee0e-2d76-42f7-8781-d8ba6c687dee" >
-		<http:listener doc:name="Listener" doc:id="8617a2f8-cd9a-4ace-9098-bf9ac6e7224c" config-ref="HTTP_Listener_config" path="/remboursements/update"/>
-		<db:update doc:name="Update" doc:id="6f33edf1-5e32-48fa-b575-70a3c3f7461a" config-ref="MySQL">
+	<flow name="updateRemboursement" doc:id="4c5a038e-0a87-439c-8f3d-d68d49e6f8eb" >
+		<http:listener doc:name="Listener" doc:id="9789e42e-0606-4339-9f2d-e7f5ffd508d1" config-ref="HTTP_Listener_config" path="/remboursements/update"/>
+		<db:update doc:name="Update" doc:id="2669e117-2348-459c-b835-3bf045c3cc77" config-ref="MySQLConfig">
 			<db:sql ><![CDATA[update 
     demande_remboursement 
   set 
@@ -780,11 +803,11 @@ values
         "statut" : payload.statut
 }]]]></db:input-parameters>
 		</db:update>
-		<logger level="INFO" doc:name="Logger" doc:id="33167e89-3d87-4e4d-bf69-dbc57d080531" />
+		<logger level="INFO" doc:name="Logger" doc:id="ee4f4f2a-e275-44bb-a0b2-dcc9db1be9e0" />
 	</flow>
-	<flow name="updateEtatRemboursement" doc:id="98e360a8-ada5-4dee-ad2e-b26429b20053" >
-		<http:listener doc:name="Listener" doc:id="e82aca16-827b-4bd3-b1a1-47b02d0d6ca1" config-ref="HTTP_Listener_config" path="/remboursements/update/etat"/>
-		<db:update doc:name="Update" doc:id="01562ff5-35e1-436c-a3f6-997e0c31b3ab" config-ref="MySQL">
+	<flow name="updateEtatRemboursement" doc:id="ac4b3878-c372-4cd8-bc7a-acdb6a59cd21" >
+		<http:listener doc:name="Listener" doc:id="c77e66b8-57a5-4c81-819d-c3ee7228c9c7" config-ref="HTTP_Listener_config" path="/remboursements/update/etat"/>
+		<db:update doc:name="Update" doc:id="b5a8293e-9c22-4f15-8ee3-61caab05fb95" config-ref="MySQLConfig">
 			<db:sql ><![CDATA[update 
     demande_remboursement 
   set 
@@ -796,11 +819,11 @@ values
     "statut" : payload.statut
  }]]]></db:input-parameters>
 		</db:update>
-		<logger level="INFO" doc:name="Logger" doc:id="fd2f3879-c3fe-49de-b454-e1d4cc8341cf" />
+		<logger level="INFO" doc:name="Logger" doc:id="3667dd4d-8f59-42af-965c-49ceb40fa21b" />
 	</flow>
-	<flow name="deleteRemboursement" doc:id="6653f1e1-ccfd-427a-bad9-7230b1e9154c" >
-		<http:listener doc:name="Listener" doc:id="6574654f-1aba-4e77-a3ab-8930ebb21b74" config-ref="HTTP_Listener_config" path="/remboursements/delete"/>
-		<db:delete doc:name="Delete" doc:id="0716c126-0c06-4b94-af50-b5515012c5ad" config-ref="MySQL">
+	<flow name="deleteRemboursement" doc:id="ece2f1e3-5f18-4f3b-9bdc-2ac2bf50b870" >
+		<http:listener doc:name="Listener" doc:id="d36e8926-8f0b-4724-8dc8-5b24849c1f0d" config-ref="HTTP_Listener_config" path="/remboursements/delete"/>
+		<db:delete doc:name="Delete" doc:id="c07e8d14-bc88-4253-9142-194560112e94" config-ref="MySQLConfig">
 			<db:sql ><![CDATA[delete from 
   demande_remboursement 
 where 
@@ -809,11 +832,11 @@ where
 	"id": payload.id
 }]]]></db:input-parameters>
 		</db:delete>
-		<logger level="INFO" doc:name="Logger" doc:id="b0faa8d1-38f8-4f76-8dda-53e9d14c785f" />
+		<logger level="INFO" doc:name="Logger" doc:id="98ad43ce-100d-46e0-a287-8c9569638144" />
 	</flow>
-	<flow name="findMissionNonRemboursee" doc:id="1a1e9d78-3ed1-46b8-b95d-6d8c7d693e69" >
-		<http:listener doc:name="Listener" doc:id="155f7f3b-987f-46d1-b498-0ff1548275bd" config-ref="HTTP_Listener_config" path="/missions/non-rembourse"/>
-		<db:select doc:name="Select" doc:id="2f124ac9-3196-48a4-b6a4-80614ff6c728" config-ref="MySQL">
+	<flow name="findMissionNonRemboursee" doc:id="d1c17ce4-6779-41db-afee-e9ffeacbf547" >
+		<http:listener doc:name="Listener" doc:id="a649c2bc-00c8-4e92-bd32-44d4fbbcc897" config-ref="HTTP_Listener_config" path="/missions/non-rembourse"/>
+		<db:select doc:name="Select" doc:id="bae9ec68-ffe5-4644-92e6-47100338dd3d" config-ref="MySQLConfig">
 			<db:sql ><![CDATA[select d.id, u.id as id_professeur, u.nom, u.prenom, destination,
 d.description, dateDepartPrevu, dateRetourPrevu , d.statut 
 from demande_mission d join users u
@@ -822,8 +845,8 @@ join demande_remboursement dr on d.id = dr.code_mission
 where u.role = 'professeur'
 and dr.statut = 'annule']]></db:sql>
 		</db:select>
-		<logger level="INFO" doc:name="Logger" doc:id="1980aa47-777c-4997-af3b-6bccd9c8c45e" />
-		<ee:transform doc:name="Transform Message" doc:id="ac76ca74-d941-43ff-b292-86bd507e9d9c" >
+		<logger level="INFO" doc:name="Logger" doc:id="5106efd0-070a-46f6-a970-79f0a98db39c" />
+		<ee:transform doc:name="Transform Message" doc:id="aa3b5c4a-a539-4232-929d-895204daa6de" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
@@ -845,11 +868,11 @@ payload map((item, index) -> {
 ]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger" doc:id="418972a6-6333-41a6-97e2-02cd42fcb0f2" />
+		<logger level="INFO" doc:name="Logger" doc:id="02a76372-45e3-4083-9c16-817ca54eaf3e" />
 	</flow>
-	<flow name="findMissionNonRembourseePending" doc:id="0a6dc6b5-26f4-4973-88e1-226a9e2de9b4">
-		<http:listener doc:name="Listener" doc:id="b540dce0-b113-4e5c-9180-dbf3e0a49159" config-ref="HTTP_Listener_config" path="/missions/non-rembourse/pending" />
-		<db:select doc:name="Select" doc:id="c5b1d79b-68c5-4e50-b081-eda92412eeda" config-ref="MySQL">
+	<flow name="findMissionNonRembourseePending" doc:id="069260fa-f8eb-4571-8c86-db1cfbc956a7">
+		<http:listener doc:name="Listener" doc:id="9de35d39-3a08-4a5b-a5a7-fcc9e4fc64b5" config-ref="HTTP_Listener_config" path="/missions/non-rembourse/pending" />
+		<db:select doc:name="Select" doc:id="f799eacb-7fd3-41ed-a51f-0523ccfca9a0" config-ref="MySQLConfig">
 			<db:sql><![CDATA[select d.id, u.id as id_professeur, u.nom, u.prenom, destination,
 d.description, dateDepartPrevu, dateRetourPrevu , d.statut 
 from demande_mission d join users u
@@ -858,8 +881,8 @@ join demande_remboursement dr on d.id = dr.code_mission
 where u.role = 'professeur'
 and dr.statut = 'pending']]></db:sql>
 		</db:select>
-		<logger level="INFO" doc:name="Logger" doc:id="e953988b-db1b-41f8-9719-e1ebdf227ff8" />
-		<ee:transform doc:name="Transform Message" doc:id="fa2fdd55-eea3-4b49-befe-3c493bd9df79">
+		<logger level="INFO" doc:name="Logger" doc:id="72aae077-7bbe-447a-969e-c1ede3816220" />
+		<ee:transform doc:name="Transform Message" doc:id="adea6f76-e58d-4d45-b991-40f6d527dd96">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -881,26 +904,28 @@ payload map((item, index) -> {
 ]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger1" doc:id="00560b38-5b3d-4e05-b3f7-9efe69e7736e" />
+		<logger level="INFO" doc:name="Logger1" doc:id="5a95fc86-5071-439a-90ce-ae5091dfc72e" />
 	</flow>
-	<flow name="calculerNombreTaux" doc:id="cb813a4b-798f-4d39-a0bc-a84c1e835151" >
-		<http:listener doc:name="Listener" doc:id="5ef1f6f1-c5f0-4174-a329-622a052ca2b6" config-ref="HTTP_Listener_config" path="/calculer-taux"/>
-		<db:stored-procedure doc:name="Stored procedure" doc:id="85297465-3c9a-46a3-8b19-81fbb283ceb5" config-ref="MySQL">
+	<flow name="calculerNombreTaux" doc:id="a657f76a-32f2-4e88-b07a-45faba182e82" >
+		<http:listener doc:name="Listener" doc:id="585e58d9-6e43-4a30-88b0-8b4be608cade" config-ref="HTTP_Listener_config" path="/taux"/>
+		<db:stored-procedure doc:name="Stored procedure" doc:id="53d066ac-4f93-425a-b938-42659bdcade7" config-ref="MySQLConfig">
 			<db:sql ><![CDATA[CREATE PROCEDURE calculerNombreTaux(IN mission_id INT)
 BEGIN
   DECLARE nombre_total INT;
   DECLARE nombre_reussi INT;
   DECLARE taux DECIMAL(5,2);
   
-  --calc nombre_total et nombre_reussi
+  --SELECT COUNT(*) INTO nombre_total FROM demande_mission WHERE id = mission_id;
+  --SELECT COUNT(*) INTO nombre_reussi FROM demande_mission WHERE id = mission_id AND status = 'valide';
   
   SET taux = (nombre_reussi / nombre_total) * 100;
+  
   SELECT taux AS 'Taux de réussite de la mission';
 END]]></db:sql>
 			<db:input-parameters ><![CDATA[#[{
 	
 }]]]></db:input-parameters>
 		</db:stored-procedure>
-		<logger level="INFO" doc:name="Logger" doc:id="3d222b43-4c8d-46ff-b41b-53ee1346858d" />
+		<logger level="INFO" doc:name="Logger" doc:id="50acdb99-6d6f-46ee-950d-3d297073c8b7" />
 	</flow>
 </mule>

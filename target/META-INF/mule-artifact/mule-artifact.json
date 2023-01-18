@@ -4,7 +4,7 @@
   ],
   "secureProperties": [],
   "redeploymentEnabled": true,
-  "name": "com.mycompany:soaproject:1.0.0-SNAPSHOT",
+  "name": "com.ensias:soaproject:1.0.0-SNAPSHOT",
   "minMuleVersion": "4.4.0",
   "requiredProduct": "MULE_EE",
   "classLoaderModelLoaderDescriptor": {
@@ -12,8 +12,6 @@
     "attributes": {
       "exportedPackages": [],
       "exportedResources": [
-        "application-types.xml",
-        "log4j2.xml",
         "soaproject.xml"
       ]
     }
